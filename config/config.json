@@ -1,0 +1,13 @@
+{
+  "split playlist into chunks of" : 2000,
+  "Limit extensions to" : ["FLAC", "M4A", "MP3", "MP4", "OGG", "WAV", "WMA", "WMV"],
+  "music folder" : "/home/user/Music/Music",
+  "print a list of extensions" : true,
+  "print a list of file names" : false,
+  "limit list file names to" : 20,
+  "output folder" : "/home/user/Music/PlaylistsTest",
+  "playlist name" : "playlist-",
+  "shuffle playlist" : true,
+  "split playlist" : true,
+  "read tags" : true
+}
