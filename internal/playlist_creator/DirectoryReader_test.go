@@ -1,7 +1,7 @@
 package playlist_creator
 
 import (
-	config2 "awesomeProject/internal/playlist_creator/config"
+	config2 "playlistCreator/internal/playlist_creator/config"
 	"testing"
 )
 

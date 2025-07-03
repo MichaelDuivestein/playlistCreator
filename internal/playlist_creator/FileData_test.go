@@ -1,9 +1,9 @@
 package playlist_creator
 
 import (
-	config2 "awesomeProject/internal/playlist_creator/config"
 	"bytes"
 	"os"
+	"playlistCreator/internal/playlist_creator/config"
 	"testing"
 )
 
@@ -145,7 +145,7 @@ func TestFileData_listFileExtensions_ShouldHandleNilUniqueExtensions(t *testing.
 }
 
 func TestFileData_listFiles_ShouldPrintFilesList(t *testing.T) {
-	var config = config2.Config{
+	var configData = config.Config{
 		ListLimit: -1,
 	}
 	var fileData = FileData{}
@@ -157,7 +157,7 @@ func TestFileData_listFiles_ShouldPrintFilesList(t *testing.T) {
 	input, output, _ := os.Pipe()
 	os.Stdout = output
 
-	fileData.ListFiles(&config)
+	fileData.ListFiles(&configData)
 
 	output.Close()
 	os.Stdout = old
@@ -177,7 +177,7 @@ func TestFileData_listFiles_ShouldPrintFilesList(t *testing.T) {
 }
 
 func TestFileData_listFiles_ShouldHandleNilFilesList(t *testing.T) {
-	var config = config2.Config{
+	var configData = config.Config{
 		ListLimit: -1,
 	}
 	var fileData = FileData{}
@@ -187,7 +187,7 @@ func TestFileData_listFiles_ShouldHandleNilFilesList(t *testing.T) {
 	input, output, _ := os.Pipe()
 	os.Stdout = output
 
-	fileData.ListFiles(&config)
+	fileData.ListFiles(&configData)
 
 	output.Close()
 	os.Stdout = old
@@ -201,7 +201,7 @@ func TestFileData_listFiles_ShouldHandleNilFilesList(t *testing.T) {
 }
 
 func TestFileData_listFiles_ShouldObeyListLimit(t *testing.T) {
-	var config = config2.Config{
+	var configData = config.Config{
 		ListLimit: 3,
 	}
 	var fileData = FileData{}
@@ -215,7 +215,7 @@ func TestFileData_listFiles_ShouldObeyListLimit(t *testing.T) {
 	input, output, _ := os.Pipe()
 	os.Stdout = output
 
-	fileData.ListFiles(&config)
+	fileData.ListFiles(&configData)
 
 	output.Close()
 	os.Stdout = old
@@ -241,7 +241,7 @@ func TestFileData_listFiles_ShouldObeyListLimit(t *testing.T) {
 }
 
 func TestFileData_listFiles_ShouldHandleListLimitLargerThanActualFiles(t *testing.T) {
-	var config = config2.Config{
+	var configData = config.Config{
 		ListLimit: 10,
 	}
 	var fileData = FileData{}
@@ -255,7 +255,7 @@ func TestFileData_listFiles_ShouldHandleListLimitLargerThanActualFiles(t *testin
 	input, output, _ := os.Pipe()
 	os.Stdout = output
 
-	fileData.ListFiles(&config)
+	fileData.ListFiles(&configData)
 
 	output.Close()
 	os.Stdout = old
@@ -281,7 +281,7 @@ func TestFileData_listFiles_ShouldHandleListLimitLargerThanActualFiles(t *testin
 }
 
 func TestFileData_listFiles_ShouldHandleListLimitOfZero(t *testing.T) {
-	var config = config2.Config{
+	var configData = config.Config{
 		ListLimit: 0,
 	}
 	var fileData = FileData{}
@@ -295,7 +295,7 @@ func TestFileData_listFiles_ShouldHandleListLimitOfZero(t *testing.T) {
 	input, output, _ := os.Pipe()
 	os.Stdout = output
 
-	fileData.ListFiles(&config)
+	fileData.ListFiles(&configData)
 
 	output.Close()
 	os.Stdout = old

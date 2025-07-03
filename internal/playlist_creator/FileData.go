@@ -1,8 +1,8 @@
 package playlist_creator
 
 import (
-	"awesomeProject/internal/playlist_creator/config"
 	"fmt"
+	"playlistCreator/internal/playlist_creator/config"
 	"strings"
 )
 

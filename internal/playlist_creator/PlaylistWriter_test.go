@@ -1,9 +1,9 @@
 package playlist_creator
 
 import (
-	config2 "awesomeProject/internal/playlist_creator/config"
 	"encoding/csv"
 	"os"
+	"playlistCreator/internal/playlist_creator/config"
 	"slices"
 	"strings"
 	"testing"
@@ -18,7 +18,7 @@ func TestPlaylistWriter_writePlaylist_ShouldWriteAPlaylist(t *testing.T) {
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:      outputPath,
 		PlaylistName:    "testPlaylist",
 		ShufflePlaylist: false,
@@ -34,9 +34,12 @@ func TestPlaylistWriter_writePlaylist_ShouldWriteAPlaylist(t *testing.T) {
 		},
 	}
 
-	WritePlaylist(&config, &fileData)
+	err = WritePlaylist(&configData, &fileData)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	if err != nil {
 		t.Fatal("Expected playlist file to be created", err)
 	}
@@ -94,7 +97,7 @@ func TestPlaylistWriter_writePlaylist_ShouldWriteAShuffledPlaylist(t *testing.T)
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:      outputPath,
 		PlaylistName:    "testPlaylist",
 		ShufflePlaylist: true,
@@ -110,9 +113,12 @@ func TestPlaylistWriter_writePlaylist_ShouldWriteAShuffledPlaylist(t *testing.T)
 		},
 	}
 
-	WritePlaylist(&config, &fileData)
+	err = WritePlaylist(&configData, &fileData)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	if err != nil {
 		t.Fatal("Expected playlist file to be created", err)
 	}
@@ -156,7 +162,7 @@ func TestPlaylistWriter_writePlaylist_ShouldSplitAPaylistWhenEntriesExceedSplitS
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:      outputPath,
 		PlaylistName:    "testPlaylist",
 		ShufflePlaylist: false,
@@ -174,9 +180,12 @@ func TestPlaylistWriter_writePlaylist_ShouldSplitAPaylistWhenEntriesExceedSplitS
 		},
 	}
 
-	WritePlaylist(&config, &fileData)
+	err = WritePlaylist(&configData, &fileData)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file1, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file1, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	reader := csv.NewReader(file1)
 	lines, err := reader.ReadAll()
 
@@ -210,7 +219,7 @@ func TestPlaylistWriter_writePlaylist_ShouldSplitAPaylistWhenEntriesExceedSplitS
 		t.Fatal("Expected seventh line to be 'pathTwo/fileOne.qt'")
 	}
 
-	file2, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_02.m3u8")
+	file2, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_02.m3u8")
 	reader = csv.NewReader(file2)
 	lines, err = reader.ReadAll()
 
@@ -240,7 +249,7 @@ func TestPlaylistWriter_writePlaylist_ShouldNotSplitAPaylistWhenEntriesEqualsSpl
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:      outputPath,
 		PlaylistName:    "testPlaylist",
 		ShufflePlaylist: false,
@@ -258,9 +267,12 @@ func TestPlaylistWriter_writePlaylist_ShouldNotSplitAPaylistWhenEntriesEqualsSpl
 		},
 	}
 
-	WritePlaylist(&config, &fileData)
+	err = WritePlaylist(&configData, &fileData)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file1, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file1, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	reader := csv.NewReader(file1)
 	lines, err := reader.ReadAll()
 
@@ -269,7 +281,7 @@ func TestPlaylistWriter_writePlaylist_ShouldNotSplitAPaylistWhenEntriesEqualsSpl
 		t.Fatal("Expected number of lines in file to be 9")
 	}
 
-	_, err = os.Stat(config.OutputPath + "/" + config.PlaylistName + "_02.m3u8")
+	_, err = os.Stat(configData.OutputPath + "/" + configData.PlaylistName + "_02.m3u8")
 	if !os.IsNotExist(err) {
 		t.Fatal("second playlist should not exist")
 	}
@@ -284,7 +296,7 @@ func TestPlaylistWriter_writePlaylist_ShouldNotSplitAPaylistWhenEntriesExceedSpl
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:      outputPath,
 		PlaylistName:    "testPlaylist",
 		ShufflePlaylist: false,
@@ -302,9 +314,12 @@ func TestPlaylistWriter_writePlaylist_ShouldNotSplitAPaylistWhenEntriesExceedSpl
 		},
 	}
 
-	WritePlaylist(&config, &fileData)
+	err = WritePlaylist(&configData, &fileData)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file1, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file1, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	reader := csv.NewReader(file1)
 	lines, err := reader.ReadAll()
 
@@ -313,7 +328,7 @@ func TestPlaylistWriter_writePlaylist_ShouldNotSplitAPaylistWhenEntriesExceedSpl
 		t.Fatal("Expected number of lines in file to be 9")
 	}
 
-	_, err = os.Stat(config.OutputPath + "/" + config.PlaylistName + "_02.m3u8")
+	_, err = os.Stat(configData.OutputPath + "/" + configData.PlaylistName + "_02.m3u8")
 	if !os.IsNotExist(err) {
 		t.Fatal("second playlist should not exist")
 	}
@@ -328,7 +343,7 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAPlaylistFile(t *testing.T)
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:    outputPath,
 		PlaylistName:  "testPlaylist",
 		ReadTags:      false,
@@ -343,9 +358,12 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAPlaylistFile(t *testing.T)
 		{"pathTwo", "fileTwo.a"},
 	}
 
-	writePlaylistFile(&config, 1, &fileEntries)
+	err = writePlaylistFile(&configData, 1, &fileEntries)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	if err != nil {
 		t.Fatal("Expected playlist file to be created", err)
 	}
@@ -403,7 +421,7 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAnEmptyPlaylistFile(t *test
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var config = config2.Config{
+	var configData = config.Config{
 		OutputPath:   outputPath,
 		PlaylistName: "testPlaylist",
 		ReadTags:     false,
@@ -411,9 +429,12 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAnEmptyPlaylistFile(t *test
 
 	var fileEntries []FileEntry
 
-	writePlaylistFile(&config, 1, &fileEntries)
+	err = writePlaylistFile(&configData, 1, &fileEntries)
+	if err != nil {
+		t.Fatal("Expected no error when writing playlist", err)
+	}
 
-	file, err := os.Open(config.OutputPath + "/" + config.PlaylistName + "_01.m3u8")
+	file, err := os.Open(configData.OutputPath + "/" + configData.PlaylistName + "_01.m3u8")
 	if err != nil {
 		t.Fatal("Expected playlist file to be created", err)
 	}
@@ -442,16 +463,19 @@ func TestPlaylistWriter_createFolderIfNotExists_ShouldCreateAFolderIfItDoesntExi
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var _, err2 = os.Stat(parentDirectory)
-	if os.IsNotExist(err2) {
+	_, err = os.Stat(parentDirectory)
+	if os.IsNotExist(err) {
 		t.Fatal("Expected parent directory to be created")
 	}
 
 	var testPath = parentDirectory + "/testPlaylistFile"
-	createFolderIfNotExists(testPath)
+	err = createFolderIfNotExists(testPath)
+	if err != nil {
+		t.Fatal("Expected no error when creating folder", err)
+	}
 
-	var _, err3 = os.Stat(testPath)
-	if os.IsNotExist(err3) {
+	_, err = os.Stat(testPath)
+	if os.IsNotExist(err) {
 		t.Fatal("Expected directory to be created")
 	}
 }

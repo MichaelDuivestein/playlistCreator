@@ -1,31 +1,34 @@
 package main
 
 import (
-	"awesomeProject/internal/playlist_creator"
-	"awesomeProject/internal/playlist_creator/config"
 	"fmt"
+	"log"
+	"playlistCreator/internal/playlist_creator"
+	"playlistCreator/internal/playlist_creator/config"
 )
 
 func main() {
-	var config, err = config.LoadConfig()
+	var configData, err = config.LoadConfig()
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("Error loading config: %s", err.Error())
 	}
 
-	var fileData = playlist_creator.ReadFiles(config)
+	var fileData = playlist_creator.ReadFiles(configData)
 	if fileData.FilesList == nil || len(fileData.FilesList) == 0 {
 		fmt.Println("No files found")
 		return
 	}
 
-	if config.ListExtensions {
+	if configData.ListExtensions {
 		fileData.ListFileExtensions()
 	}
 
-	if config.ListFiles {
-		fileData.ListFiles(config)
+	if configData.ListFiles {
+		fileData.ListFiles(configData)
 	}
 
-	playlist_creator.WritePlaylist(config, fileData)
+	err = playlist_creator.WritePlaylist(configData, fileData)
+	if err != nil {
+		log.Fatalf("Could not write playlists: %s", err)
+	}
 }

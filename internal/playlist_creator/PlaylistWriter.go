@@ -1,17 +1,17 @@
 package playlist_creator
 
 import (
-	"awesomeProject/internal/playlist_creator/config"
 	"fmt"
 	"iter"
 	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"playlistCreator/internal/playlist_creator/config"
 	"slices"
 )
 
-func WritePlaylist(config *config.Config, fileData *FileData) {
+func WritePlaylist(config *config.Config, fileData *FileData) error {
 	if config.ShufflePlaylist {
 		rand.Shuffle(len(fileData.FilesList), func(counter1, counter2 int) {
 			fileData.FilesList[counter1], fileData.FilesList[counter2] = fileData.FilesList[counter2], fileData.FilesList[counter1]
@@ -20,7 +20,10 @@ func WritePlaylist(config *config.Config, fileData *FileData) {
 
 	println("Writing playlists")
 
-	createFolderIfNotExists(config.OutputPath)
+	var err = createFolderIfNotExists(config.OutputPath)
+	if err != nil {
+		return err
+	}
 
 	var chunks iter.Seq[[]FileEntry]
 
@@ -34,21 +37,27 @@ func WritePlaylist(config *config.Config, fileData *FileData) {
 	for entry := range chunks {
 		playlistNum++
 		fmt.Printf("Writing playlist %d\n", playlistNum)
-		writePlaylistFile(config, playlistNum, &entry)
+		var err = writePlaylistFile(config, playlistNum, &entry)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]FileEntry) {
+func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]FileEntry) error {
 	file, err := os.Create(config.OutputPath + "/" + config.PlaylistName + "_" + fmt.Sprintf("%02d", playlistNum) + ".m3u8")
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Could not create playlist file %s_%s.m3u8: %s", config.PlaylistName, fmt.Sprintf("%02d", playlistNum), err.Error())
+		return err
 	}
 
 	defer file.Close()
 
 	_, err = file.WriteString("#EXTM3U" + "\n")
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error writing header to playlist file %s_%s.m3u8: %s", config.PlaylistName, fmt.Sprintf("%02d", playlistNum), err.Error())
+		return err
 	}
 
 	for _, entry := range *fileEntries {
@@ -62,22 +71,26 @@ func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]Fi
 
 		_, err = file.WriteString("#EXTINF:" + title + "\n")
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error writing EXTINF to playlist file %s_%s.m3u8. Pitle: %s. Error:: %s", config.PlaylistName, title, fmt.Sprintf("%02d", playlistNum), err.Error())
+			continue
 		}
 		_, err = file.WriteString(entry.Path + "/" + entry.FileName + "\n")
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error writing path to playlist file %s_%s.m3u8. Path: %s/%s. Error: %s", config.PlaylistName, fmt.Sprintf("%02d", playlistNum), entry.Path, entry.FileName, err.Error())
 		}
 	}
+	return nil
 }
 
-func createFolderIfNotExists(pathAndFolder string) {
+func createFolderIfNotExists(pathAndFolder string) error {
 	var _, err = os.Stat(pathAndFolder)
 
 	if os.IsNotExist(err) {
-		err := os.Mkdir(pathAndFolder, os.FileMode(0777))
+		err := os.MkdirAll(pathAndFolder, os.FileMode(0777))
 		if err != nil {
-			log.Fatal("Cannot create folder: "+pathAndFolder, err)
+			log.Printf("Error: Cannot create folder: %s, %s", pathAndFolder, err.Error())
+			return err
 		}
 	}
+	return nil
 }

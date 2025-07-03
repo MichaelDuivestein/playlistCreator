@@ -1,4 +1,4 @@
-module awesomeProject
+module playlistCreator
 
 go 1.24
 

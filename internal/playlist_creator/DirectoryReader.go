@@ -1,10 +1,10 @@
 package playlist_creator
 
 import (
-	"awesomeProject/internal/playlist_creator/config"
 	"log"
 	"os"
 	"path/filepath"
+	"playlistCreator/internal/playlist_creator/config"
 	"sort"
 	"strings"
 )
@@ -24,7 +24,7 @@ func ReadFiles(config *config.Config) *FileData {
 func readFilesRecursively(config *config.Config, directoryNameAndPath string, fileData *FileData) {
 	files, err := os.ReadDir(directoryNameAndPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Warning: Could not read directory %s: %s", directoryNameAndPath, err.Error())
 	}
 
 	// https://golang.cafe/blog/how-to-list-files-in-a-directory-in-go.html
