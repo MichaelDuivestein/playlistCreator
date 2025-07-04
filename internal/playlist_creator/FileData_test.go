@@ -2,80 +2,69 @@ package playlist_creator
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"playlistCreator/internal/playlist_creator/config"
 	"testing"
 )
 
-func TestFileData_addFileExtension_ShouldAddAnExtensionThatDoesNotExist(t *testing.T) {
-	var fileData = FileData{}
+func TestFileData_addFileExtension(t *testing.T) {
+	t.Parallel()
 
-	if fileData.UniqueExtensions != nil {
-		t.Fatal("Expected UniqueExtensions to be nil")
+	tests := []struct {
+		name                   string
+		extensions             []string
+		expectedExtensionsSize int
+		expectedExtensions     map[string]int
+	}{
+		{
+			name:                   "Should add an extension that does not exist",
+			extensions:             []string{"abc"},
+			expectedExtensionsSize: 1,
+			expectedExtensions:     map[string]int{"abc": 1},
+		},
+		{
+			name:                   "Should add multiple extensions",
+			extensions:             []string{"abc", "123"},
+			expectedExtensionsSize: 2,
+			expectedExtensions:     map[string]int{"abc": 1, "123": 1},
+		},
+		{
+			name:                   "Should increment extensions",
+			extensions:             []string{"abc", "123", "abc"},
+			expectedExtensionsSize: 2,
+			expectedExtensions:     map[string]int{"abc": 2, "123": 1},
+		},
 	}
 
-	fileData.addFileExtension("abc")
-	if fileData.UniqueExtensions == nil {
-		t.Fatal("Expected UniqueExtensions to not be nil")
-	}
+	for _, testData := range tests {
+		testData := testData
+		t.Run(testData.name, func(t *testing.T) {
+			t.Parallel()
 
-	if len(fileData.UniqueExtensions) != 1 {
-		t.Fatal("Expected UniqueExtensions to contain 1 element")
-	}
+			var fileData = FileData{}
+			if fileData.UniqueExtensions != nil {
+				t.Error("Expected UniqueExtensions to be nil")
+			}
 
-	if _, ok := fileData.UniqueExtensions["abc"]; !ok {
-		t.Fatal("Expected UniqueExtensions key 'abc' to be present")
-	}
+			for index := range testData.extensions {
+				fileData.addFileExtension(testData.extensions[index])
+			}
 
-	if count, _ := fileData.UniqueExtensions["abc"]; count != 1 {
-		t.Fatal("Expected UniqueExtensions key 'abc' to contain a value of '1'")
-	}
-}
+			if len(fileData.UniqueExtensions) != testData.expectedExtensionsSize {
+				t.Errorf("Expected UniqueExtensions to contain '%d' elements. Actual: '%d'.", testData.expectedExtensionsSize, len(fileData.UniqueExtensions))
+			}
 
-func TestFileData_addFileExtension_ShouldAddMultipleExtensions(t *testing.T) {
-	var fileData = FileData{}
+			for extension, extensionCount := range testData.expectedExtensions {
+				if _, ok := fileData.UniqueExtensions[extension]; !ok {
+					t.Errorf("Expected UniqueExtensions key %s to be present", extension)
+				}
 
-	fileData.addFileExtension("abc")
-	fileData.addFileExtension("123")
-
-	if len(fileData.UniqueExtensions) != 2 {
-		t.Fatal("Expected UniqueExtensions to contain 2 elements")
-	}
-
-	if _, ok := fileData.UniqueExtensions["abc"]; !ok {
-		t.Fatal("Expected UniqueExtensions key 'abc' to be present")
-	}
-	if count, _ := fileData.UniqueExtensions["abc"]; count != 1 {
-		t.Fatal("Expected UniqueExtensions key 'abc' to contain a value of '1'")
-	}
-
-	if _, ok := fileData.UniqueExtensions["123"]; !ok {
-		t.Fatal("Expected UniqueExtensions key '123' to be present")
-	}
-	if count, _ := fileData.UniqueExtensions["123"]; count != 1 {
-		t.Fatal("Expected UniqueExtensions key '123' to contain a value of '1'")
-	}
-}
-
-func TestFileData_addFileExtension_ShouldIncrementExtensionCount(t *testing.T) {
-	var fileData = FileData{}
-
-	fileData.addFileExtension("abc")
-	fileData.addFileExtension("123")
-	fileData.addFileExtension("abc")
-
-	if _, ok := fileData.UniqueExtensions["abc"]; !ok {
-		t.Fatal("Expected UniqueExtensions key 'abc' to be present")
-	}
-	if count, _ := fileData.UniqueExtensions["abc"]; count != 2 {
-		t.Fatal("Expected UniqueExtensions key 'abc' to contain a value of '2'")
-	}
-
-	if _, ok := fileData.UniqueExtensions["123"]; !ok {
-		t.Fatal("Expected UniqueExtensions key '123' to be present")
-	}
-	if count, _ := fileData.UniqueExtensions["123"]; count != 1 {
-		t.Fatal("Expected UniqueExtensions key '123' to contain a value of '1'")
+				if actualCount, _ := fileData.UniqueExtensions[extension]; actualCount != extensionCount {
+					t.Errorf("Expected UniqueExtensions key '%s' to contain a value of '%d'. Actual: '%d'", extension, extensionCount, actualCount)
+				}
+			}
+		})
 	}
 }
 
@@ -144,178 +133,123 @@ func TestFileData_listFileExtensions_ShouldHandleNilUniqueExtensions(t *testing.
 	}
 }
 
-func TestFileData_listFiles_ShouldPrintFilesList(t *testing.T) {
-	var configData = config.Config{
-		ListLimit: -1,
+func TestFileData_ListFiles(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                      string
+		listLimit                 int
+		files                     []FileEntry
+		expectedNumPrintedFiles   int
+		expectedNumFiles          int
+		expectTruncatedList       bool
+		expectContinuationEllipse bool
+	}{
+		{
+			name:      "Should print files list",
+			listLimit: -1,
+			files: []FileEntry{
+				{"somePath", "someFileName"},
+				{"anotherPath", "anotherFileName"},
+			},
+			expectedNumFiles: 2,
+		},
+		{
+			name:             "Should handle nil files list",
+			listLimit:        -1,
+			expectedNumFiles: 0,
+		},
+		{
+			name:      "Should obey list limit",
+			listLimit: 3,
+			files: []FileEntry{
+				{"somePath", "someFileName"},
+				{"anotherPath", "anotherFileName"},
+				{"somePath", "aDifferentFileName"},
+				{"someOtherPath", "someFileName"},
+			},
+			expectedNumPrintedFiles:   3,
+			expectedNumFiles:          4,
+			expectTruncatedList:       true,
+			expectContinuationEllipse: true,
+		},
+		{
+			name:      "Should handle list limit larger than actual file count",
+			listLimit: 10,
+			files: []FileEntry{
+				{"somePath", "someFileName"},
+				{"anotherPath", "anotherFileName"},
+				{"somePath", "aDifferentFileName"},
+				{"someOtherPath", "someFileName"},
+			},
+			expectedNumPrintedFiles: 4,
+			expectedNumFiles:        4,
+			expectTruncatedList:     true,
+		},
+		{
+			name:      "Should handle list limit of zero",
+			listLimit: 0,
+			files: []FileEntry{
+				{"somePath", "someFileName"},
+				{"anotherPath", "anotherFileName"},
+				{"somePath", "aDifferentFileName"},
+				{"someOtherPath", "someFileName"},
+			},
+			expectedNumPrintedFiles: 0,
+			expectedNumFiles:        4,
+			expectTruncatedList:     true,
+		},
 	}
-	var fileData = FileData{}
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "someFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"anotherPath", "anotherFileName"})
 
-	var buf bytes.Buffer
-	old := os.Stdout
-	input, output, _ := os.Pipe()
-	os.Stdout = output
+	for _, testData := range tests {
+		testData := testData
+		t.Run(testData.name, func(t *testing.T) {
+			t.Parallel()
+		})
 
-	fileData.ListFiles(&configData)
+		var configData = config.Config{
+			ListLimit: testData.listLimit,
+		}
 
-	output.Close()
-	os.Stdout = old
-	buf.ReadFrom(input)
+		var fileData = FileData{
+			FilesList: testData.files,
+		}
 
-	actualOutput := buf.String()
+		var buf bytes.Buffer
+		old := os.Stdout
+		input, output, _ := os.Pipe()
+		os.Stdout = output
 
-	if !bytes.Contains([]byte(actualOutput), []byte("Files in list of length 2:\n")) {
-		t.Fatal("Expected output to contain 'Files in list of length 2:\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("somePath - someFileName\n")) {
-		t.Fatal("Expected output to contain 'somePath - someFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("anotherPath - anotherFileName\n")) {
-		t.Fatal("Expected output to contain 'anotherPath - anotherFileName\\n'")
-	}
-}
+		fileData.ListFiles(&configData)
 
-func TestFileData_listFiles_ShouldHandleNilFilesList(t *testing.T) {
-	var configData = config.Config{
-		ListLimit: -1,
-	}
-	var fileData = FileData{}
+		output.Close()
+		os.Stdout = old
+		buf.ReadFrom(input)
 
-	var buf bytes.Buffer
-	old := os.Stdout
-	input, output, _ := os.Pipe()
-	os.Stdout = output
+		actualOutput := buf.String()
 
-	fileData.ListFiles(&configData)
+		var expectedOutput string
+		if testData.expectTruncatedList {
+			expectedOutput = fmt.Sprintf("First %d files in list of length %d:", testData.expectedNumPrintedFiles, testData.expectedNumFiles)
+		} else {
+			expectedOutput = fmt.Sprintf("Files in list of length %d:", testData.expectedNumFiles)
+		}
+		if !bytes.Contains([]byte(actualOutput), []byte(expectedOutput+"\n")) {
+			t.Errorf("Actual output doesn't match expected output. Expecting: %s, \\n'", expectedOutput)
+		}
 
-	output.Close()
-	os.Stdout = old
-	buf.ReadFrom(input)
+		for index := range testData.files[:testData.expectedNumPrintedFiles] {
+			var fileName = testData.files[index].Path + " - " + testData.files[index].FileName
 
-	actualOutput := buf.String()
+			if !bytes.Contains([]byte(actualOutput), []byte(fileName+"\n")) {
+				t.Errorf("Expected output to contain '%s\\n'", fileName)
+			}
+		}
 
-	if !bytes.Contains([]byte(actualOutput), []byte("Files in list of length 0:\n")) {
-		t.Fatal("Expected output to contain 'Files in list of length 0:\\n'")
-	}
-}
-
-func TestFileData_listFiles_ShouldObeyListLimit(t *testing.T) {
-	var configData = config.Config{
-		ListLimit: 3,
-	}
-	var fileData = FileData{}
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "someFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"anotherPath", "anotherFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "aDifferentFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"someOtherPath", "someFileName"})
-
-	var buf bytes.Buffer
-	old := os.Stdout
-	input, output, _ := os.Pipe()
-	os.Stdout = output
-
-	fileData.ListFiles(&configData)
-
-	output.Close()
-	os.Stdout = old
-	buf.ReadFrom(input)
-
-	actualOutput := buf.String()
-
-	if !bytes.Contains([]byte(actualOutput), []byte("First 3 files in list of length 4:\n")) {
-		t.Fatal("Expected output to contain 'First 3 files in list of length 4:\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("somePath - someFileName\n")) {
-		t.Fatal("Expected output to contain 'somePath - someFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("anotherPath - anotherFileName\n")) {
-		t.Fatal("Expected output to contain 'anotherPath - anotherFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("somePath - aDifferentFileName\n")) {
-		t.Fatal("Expected output to contain 'somePath - aDifferentFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("...")) {
-		t.Fatal("Expected output to contain '...\\n'")
-	}
-}
-
-func TestFileData_listFiles_ShouldHandleListLimitLargerThanActualFiles(t *testing.T) {
-	var configData = config.Config{
-		ListLimit: 10,
-	}
-	var fileData = FileData{}
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "someFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"anotherPath", "anotherFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "aDifferentFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"someOtherPath", "someFileName"})
-
-	var buf bytes.Buffer
-	old := os.Stdout
-	input, output, _ := os.Pipe()
-	os.Stdout = output
-
-	fileData.ListFiles(&configData)
-
-	output.Close()
-	os.Stdout = old
-	buf.ReadFrom(input)
-
-	actualOutput := buf.String()
-
-	if !bytes.Contains([]byte(actualOutput), []byte("First 4 files in list of length 4:\n")) {
-		t.Fatal("Expected output to contain 'First 4 files in list of length 4:\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("somePath - someFileName\n")) {
-		t.Fatal("Expected output to contain 'somePath - someFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("anotherPath - anotherFileName\n")) {
-		t.Fatal("Expected output to contain 'anotherPath - anotherFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("somePath - aDifferentFileName\n")) {
-		t.Fatal("Expected output to contain 'somePath - aDifferentFileName\\n'")
-	}
-	if bytes.Contains([]byte(actualOutput), []byte("...")) {
-		t.Fatal("Expected output not to contain '...\\n'")
-	}
-}
-
-func TestFileData_listFiles_ShouldHandleListLimitOfZero(t *testing.T) {
-	var configData = config.Config{
-		ListLimit: 0,
-	}
-	var fileData = FileData{}
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "someFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"anotherPath", "anotherFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"somePath", "aDifferentFileName"})
-	fileData.FilesList = append(fileData.FilesList, FileEntry{"someOtherPath", "someFileName"})
-
-	var buf bytes.Buffer
-	old := os.Stdout
-	input, output, _ := os.Pipe()
-	os.Stdout = output
-
-	fileData.ListFiles(&configData)
-
-	output.Close()
-	os.Stdout = old
-	buf.ReadFrom(input)
-
-	actualOutput := buf.String()
-
-	if !bytes.Contains([]byte(actualOutput), []byte("First 0 files in list of length 4:\n")) {
-		t.Fatal("Expected output to contain 'somePath - aDifferentFileName\\n'")
-	}
-	if bytes.Contains([]byte(actualOutput), []byte("somePath - someFileName\n")) {
-		t.Fatal("Expected output to not contain 'somePath - aDifferentFileName\\n'")
-	}
-	if bytes.Contains([]byte(actualOutput), []byte("anotherPath - anotherFileName\n")) {
-		t.Fatal("Expected output to not contain 'somePath - aDifferentFileName\\n'")
-	}
-	if bytes.Contains([]byte(actualOutput), []byte("somePath - aDifferentFileName\n")) {
-		t.Fatal("Expected output to not contain 'somePath - aDifferentFileName\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("...")) {
-		t.Fatal("Expected output to contain 'somePath - aDifferentFileName\\n'")
+		if testData.expectContinuationEllipse {
+			if !bytes.Contains([]byte(actualOutput), []byte("...")) {
+				t.Error("Expected output to contain '...\\n'")
+			}
+		}
 	}
 }

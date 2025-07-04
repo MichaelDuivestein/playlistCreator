@@ -1,44 +1,65 @@
 package playlist_creator
 
 import (
-	config2 "playlistCreator/internal/playlist_creator/config"
+	"playlistCreator/internal/playlist_creator/config"
 	"testing"
 )
 
-func TestDirectoryReader_IsExtensionAllowed_ShouldAllowExtension(t *testing.T) {
-	var config = config2.Config{
-		ExtensionWhitelist: []string{"ext1", "ext2", "ext3"},
+func TestIsExtensionAllowed(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		whitelist       []string
+		extension       string
+		expectedAllowed bool
+	}{
+		{
+			name:            "Extension should be allowed",
+			whitelist:       []string{"ext1", "ext2", "ext3"},
+			extension:       "ext2",
+			expectedAllowed: true,
+		},
+		{
+			name:            "Extension should be denied",
+			whitelist:       []string{"ext1", "ext2", "ext3"},
+			extension:       "ext4",
+			expectedAllowed: false,
+		},
+		{
+			name:            "Should allow any extension if whitelist is nil",
+			whitelist:       nil,
+			extension:       "ext4",
+			expectedAllowed: true,
+		},
+		{
+			name:            "Should allow any extension if whitelist is empty",
+			whitelist:       []string{},
+			extension:       "ext4",
+			expectedAllowed: true,
+		},
+		{
+			name:            "Should match case-insensitive extensions",
+			whitelist:       []string{"EXT1"},
+			extension:       "ext1",
+			expectedAllowed: true,
+		},
 	}
 
-	if !isExtensionAllowed(&config, "ext2") {
-		t.Fatal("Expected extension 'ext2' to be allowed")
-	}
-}
+	for _, testData := range tests {
+		testData := testData
+		t.Run(testData.name, func(t *testing.T) {
+			t.Parallel()
 
-func TestDirectoryReader_IsExtensionAllowed_ShouldDenyExtension(t *testing.T) {
-	var config = config2.Config{
-		ExtensionWhitelist: []string{"ext1", "ext2", "ext3"},
-	}
+			configData := config.Config{
+				ExtensionWhitelist: testData.whitelist,
+			}
 
-	if isExtensionAllowed(&config, "ext4") {
-		t.Fatal("Expected extension 'ext4' to not be allowed")
-	}
-}
-
-func TestDirectoryReader_IsExtensionAllowed_ShouldAllowAnyExtensionIfTheListIsNil(t *testing.T) {
-	var config = config2.Config{}
-
-	if !isExtensionAllowed(&config, "ext4") {
-		t.Fatal("Expected extension 'ext4' to be allowed")
-	}
-}
-
-func TestDirectoryReader_IsExtensionAllowed_ShouldAllowAnyExtensionIfTheListIsEmpty(t *testing.T) {
-	var config = config2.Config{
-		ExtensionWhitelist: []string{},
-	}
-
-	if !isExtensionAllowed(&config, "ext4") {
-		t.Fatal("Expected extension 'ext4' to be allowed")
+			result := isExtensionAllowed(&configData, testData.extension)
+			if result != testData.expectedAllowed {
+				t.Errorf("isExtensionAllowed(%v, %q) = %v; want %v",
+					testData.whitelist, testData.extension, result, testData.expectedAllowed)
+			}
+		})
 	}
 }
