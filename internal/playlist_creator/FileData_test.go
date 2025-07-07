@@ -93,9 +93,9 @@ func TestFileData_listFileExtensions_ShouldPrintFileExtensions(t *testing.T) {
 
 	actualOutput := buf.String()
 
-	assert.True(t, bytes.Contains([]byte(actualOutput), []byte("Extensions:\n")), "Expected output to contain 'Extensions:\\n'")
-	assert.True(t, bytes.Contains([]byte(actualOutput), []byte("abc: 2\n")), "Expected output to contain 'abc: 2\\n'")
-	assert.True(t, bytes.Contains([]byte(actualOutput), []byte("123: 1\n")), "Expected output to contain '123: 1\\n'")
+	assert.Contains(t, actualOutput, "Extensions:", "Expected output to contain 'Extensions:\\n'")
+	assert.Contains(t, actualOutput, "abc: 2\n", "Expected output to contain 'abc: 2\\n'")
+	assert.Contains(t, actualOutput, "123: 1\n", "Expected output to contain '123: 1\\n'")
 }
 
 func TestFileData_listFileExtensions_ShouldHandleNilUniqueExtensions(t *testing.T) {
@@ -227,11 +227,11 @@ func TestFileData_ListFiles(t *testing.T) {
 		for index := range testData.files[:testData.expectedNumPrintedFiles] {
 			var fileName = testData.files[index].Path + " - " + testData.files[index].FileName
 
-			assert.True(t, bytes.Contains([]byte(actualOutput), []byte(fileName+"\n")), "Expected output to contain '%s\\n'", fileName)
+			assert.Contains(t, actualOutput, fileName+"\n", "Expected output to contain '%s\\n'", fileName)
 		}
 
 		if testData.expectContinuationEllipse {
-			assert.True(t, bytes.Contains([]byte(actualOutput), []byte("...")), "Expected output to contain '...\\n'")
+			assert.Contains(t, actualOutput, "...", "Expected output to contain '...\\n'")
 		}
 	}
 }

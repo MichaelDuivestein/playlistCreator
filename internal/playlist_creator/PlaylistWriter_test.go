@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"playlistCreator/internal/playlist_creator/config"
-	"slices"
 	"strings"
 	"testing"
 )
@@ -147,8 +146,8 @@ func TestPlaylistWriter_writePlaylist(t *testing.T) {
 				}
 			} else {
 				for lineIndex := 0; lineIndex < expectedNumberOfLines-1; lineIndex += 2 {
-					assert.True(t, slices.Contains(expectedPlaylistLines, strings.Join(actualLines[lineIndex+1], "")), "Expected to find a match for '%s'", expectedPlaylistLines[lineIndex])
-					assert.True(t, slices.Contains(expectedPlaylistLines, strings.Join(actualLines[lineIndex+2], "")), "Expected to find a match for '%s'", expectedPlaylistLines[lineIndex+1])
+					assert.Contains(t, expectedPlaylistLines, strings.Join(actualLines[lineIndex+1], ""), "Expected to find a match for '%s'", expectedPlaylistLines[lineIndex])
+					assert.Contains(t, expectedPlaylistLines, strings.Join(actualLines[lineIndex+2], ""), "Expected to find a match for '%s'", expectedPlaylistLines[lineIndex+1])
 				}
 			}
 		}
