@@ -3,6 +3,7 @@ package playlist_creator
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"os"
 	"playlistCreator/internal/playlist_creator/config"
 	"slices"
@@ -104,7 +105,7 @@ func TestPlaylistWriter_writePlaylist(t *testing.T) {
 			t.Parallel()
 		})
 
-		var outputPath, err = os.MkdirTemp("", "PlaylistWriterTest")
+		outputPath, err := os.MkdirTemp("", "PlaylistWriterTest")
 		if err != nil {
 			t.Error("Expected err to be nil", err)
 		}
@@ -112,7 +113,7 @@ func TestPlaylistWriter_writePlaylist(t *testing.T) {
 			t.Error("Expected parent directory to not be empty")
 		}
 
-		var configData = config.Config{
+		configData := config.Config{
 			OutputPath:      outputPath,
 			PlaylistName:    "testPlaylist",
 			ShufflePlaylist: testData.shufflePlaylist,
@@ -121,7 +122,7 @@ func TestPlaylistWriter_writePlaylist(t *testing.T) {
 			ChunkSize:       testData.chunkSize,
 		}
 
-		var fileData = FileData{
+		fileData := FileData{
 			FilesList: testData.filesList,
 		}
 
@@ -143,10 +144,10 @@ func TestPlaylistWriter_writePlaylist(t *testing.T) {
 				t.Error("Expected no error when writing playlist", err)
 			}
 
-			var expectedPlaylistLines = testData.expectedPlaylistData[playlistIndex]
+			expectedPlaylistLines := testData.expectedPlaylistData[playlistIndex]
 
 			// 1 header line; each entry takes 2 lines
-			var expectedNumberOfLines = 1 + len(expectedPlaylistLines)
+			expectedNumberOfLines := 1 + len(expectedPlaylistLines)
 			if len(actualLines) != expectedNumberOfLines {
 				t.Errorf("Expected number of lines in file to be %d", expectedNumberOfLines)
 			}
@@ -179,7 +180,9 @@ func TestPlaylistWriter_writePlaylist(t *testing.T) {
 }
 
 func TestPlaylistWriter_writePlaylistFile_ShouldWriteAPlaylistFile(t *testing.T) {
-	var outputPath, err = os.MkdirTemp("", "PlaylistWriterTest")
+	t.Parallel()
+
+	outputPath, err := os.MkdirTemp("", "PlaylistWriterTest")
 	if err != nil {
 		t.Fatal("Expected err to be nil", err)
 	}
@@ -187,7 +190,7 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAPlaylistFile(t *testing.T)
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var configData = config.Config{
+	configData := config.Config{
 		OutputPath:    outputPath,
 		PlaylistName:  "testPlaylist",
 		ReadTags:      false,
@@ -195,7 +198,7 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAPlaylistFile(t *testing.T)
 		ChunkSize:     2,
 	}
 
-	var fileEntries = []FileEntry{
+	fileEntries := []FileEntry{
 		{"pathOne", "fileOne.mp3"},
 		{"pathOne", "fileTwo.flac"},
 		{"pathTwo", "fileOne.qt"},
@@ -257,15 +260,18 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAPlaylistFile(t *testing.T)
 }
 
 func TestPlaylistWriter_writePlaylistFile_ShouldWriteAnEmptyPlaylistFile(t *testing.T) {
-	var outputPath, err = os.MkdirTemp("", "PlaylistWriterTest")
-	if err != nil {
-		t.Fatal("Expected err to be nil", err)
-	}
+	t.Parallel()
+
+	outputPath, err := os.MkdirTemp("", "PlaylistWriterTest")
+	require.NoError(t, err, "Expected err to be nil")
+
+	require.NotEmpty(t, outputPath, "Expected parent directory to not be empty")
+
 	if outputPath == "" {
 		t.Fatal("Expected parent directory to not be empty")
 	}
 
-	var configData = config.Config{
+	configData := config.Config{
 		OutputPath:   outputPath,
 		PlaylistName: "testPlaylist",
 		ReadTags:     false,
@@ -299,7 +305,9 @@ func TestPlaylistWriter_writePlaylistFile_ShouldWriteAnEmptyPlaylistFile(t *test
 }
 
 func TestPlaylistWriter_createFolderIfNotExists_ShouldCreateAFolderIfItDoesntExist(t *testing.T) {
-	var parentDirectory, err = os.MkdirTemp("", "PlaylistWriterTest")
+	t.Parallel()
+
+	parentDirectory, err := os.MkdirTemp("", "PlaylistWriterTest")
 	if err != nil {
 		t.Fatal("Expected err to be nil", err)
 	}
@@ -312,7 +320,7 @@ func TestPlaylistWriter_createFolderIfNotExists_ShouldCreateAFolderIfItDoesntExi
 		t.Fatal("Expected parent directory to be created")
 	}
 
-	var testPath = parentDirectory + "/testPlaylistFile"
+	testPath := parentDirectory + "/testPlaylistFile"
 	err = createFolderIfNotExists(testPath)
 	if err != nil {
 		t.Fatal("Expected no error when creating folder", err)

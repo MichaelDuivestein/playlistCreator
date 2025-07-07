@@ -1,15 +1,15 @@
 package playlist_creator
 
 import (
-	"fmt"
 	"github.com/bogem/id3v2/v2"
+	"log"
 )
 
 func createPlaylistEntryName(fileEntry FileEntry) string {
 
 	tag, err := id3v2.Open(fileEntry.Path+"/"+fileEntry.FileName, id3v2.Options{Parse: true})
 	if err != nil {
-		fmt.Printf("Warning: unable to get taf from file: %s", err.Error())
+		log.Printf("Warning: unable to get taf from file: %s", err.Error())
 		return ""
 	}
 	defer tag.Close()
@@ -18,12 +18,12 @@ func createPlaylistEntryName(fileEntry FileEntry) string {
 		return ""
 	}
 
-	var artist = "Unknown Artist"
+	artist := "Unknown Artist"
 	if tag.Artist() != "" {
 		artist = tag.Artist()
 	}
 
-	var title = "Unknown Title"
+	title := "Unknown Title"
 	if tag.Title() != "" {
 		title = tag.Title()
 	}

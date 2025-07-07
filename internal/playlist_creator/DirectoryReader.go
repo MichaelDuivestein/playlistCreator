@@ -9,29 +9,36 @@ import (
 	"strings"
 )
 
-func ReadFiles(config *config.Config) *FileData {
-	var fileData = FileData{}
+func ReadFiles(config *config.Config) (error, *FileData) {
+	var fileData = NewFileData()
 
-	readFilesRecursively(config, config.InputPath, &fileData)
+	err := readFilesRecursively(config, config.InputPath, fileData)
+	if err != nil {
+		log.Println(err)
+		return err, nil
+	}
 
-	sort.Slice(fileData.FilesList, func(i, j int) bool {
-		return fileData.FilesList[i].FileName < fileData.FilesList[j].FileName
-	})
+	if fileData.FilesList != nil && len(fileData.FilesList) > 1 {
+		sort.Slice(fileData.FilesList, func(i, j int) bool {
+			return fileData.FilesList[i].FileName < fileData.FilesList[j].FileName
+		})
+	}
 
-	return &fileData
+	return nil, fileData
 }
 
-func readFilesRecursively(config *config.Config, directoryNameAndPath string, fileData *FileData) {
+func readFilesRecursively(config *config.Config, directoryNameAndPath string, fileData *FileData) error {
 	files, err := os.ReadDir(directoryNameAndPath)
 	if err != nil {
 		log.Printf("Warning: Could not read directory %s: %s", directoryNameAndPath, err.Error())
+		return err
 	}
 
 	// https://golang.cafe/blog/how-to-list-files-in-a-directory-in-go.html
 	// filepath.Walk
 	for _, file := range files {
 		if !file.IsDir() {
-			var extension = filepath.Ext(file.Name())
+			extension := filepath.Ext(file.Name())
 			if extension != "" {
 				extension = extension[1:]
 
@@ -46,6 +53,7 @@ func readFilesRecursively(config *config.Config, directoryNameAndPath string, fi
 			readFilesRecursively(config, directoryNameAndPath+"/"+file.Name(), fileData)
 		}
 	}
+	return nil
 }
 
 func isExtensionAllowed(config *config.Config, extension string) bool {

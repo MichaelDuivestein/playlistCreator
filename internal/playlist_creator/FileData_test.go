@@ -3,8 +3,11 @@ package playlist_creator
 import (
 	"bytes"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"log"
 	"os"
 	"playlistCreator/internal/playlist_creator/config"
+	"reflect"
 	"testing"
 )
 
@@ -42,46 +45,35 @@ func TestFileData_addFileExtension(t *testing.T) {
 		t.Run(testData.name, func(t *testing.T) {
 			t.Parallel()
 
-			var fileData = FileData{}
-			if fileData.UniqueExtensions != nil {
-				t.Error("Expected UniqueExtensions to be nil")
-			}
+			fileData := FileData{}
+			assert.Nil(t, fileData.UniqueExtensions, "Expected UniqueExtensions to be nil")
 
 			for index := range testData.extensions {
 				fileData.addFileExtension(testData.extensions[index])
 			}
 
-			if len(fileData.UniqueExtensions) != testData.expectedExtensionsSize {
-				t.Errorf("Expected UniqueExtensions to contain '%d' elements. Actual: '%d'.", testData.expectedExtensionsSize, len(fileData.UniqueExtensions))
-			}
-
-			for extension, extensionCount := range testData.expectedExtensions {
-				if _, ok := fileData.UniqueExtensions[extension]; !ok {
-					t.Errorf("Expected UniqueExtensions key %s to be present", extension)
-				}
-
-				if actualCount, _ := fileData.UniqueExtensions[extension]; actualCount != extensionCount {
-					t.Errorf("Expected UniqueExtensions key '%s' to contain a value of '%d'. Actual: '%d'", extension, extensionCount, actualCount)
-				}
-			}
+			assert.Equal(t, testData.expectedExtensionsSize, len(fileData.UniqueExtensions), "Expected UniqueExtensions to be size")
+			assert.True(t, reflect.DeepEqual(testData.expectedExtensions, fileData.UniqueExtensions), "Expected `UniqueExtensions` to contain the same key-value pairs as `expectedExtensions`.")
 		})
 	}
 }
 
 func TestFileData_incrementUniqueExtensions_ShouldIgnoreCase(t *testing.T) {
-	var fileData = FileData{}
+	t.Parallel()
+
+	fileData := FileData{}
 
 	fileData.addFileExtension("abc")
 	fileData.addFileExtension("ABC")
 	fileData.addFileExtension("aBc")
 	fileData.addFileExtension("Abc")
 
-	if count, _ := fileData.UniqueExtensions["abc"]; count != 4 {
-		t.Fatal("Expected UniqueExtensions key 'abc' to contain a value of '4'")
-	}
+	assert.Equal(t, 4, fileData.UniqueExtensions["abc"], "Expected UniqueExtensions key 'abc' to contain a value of '4'")
 }
 
 func TestFileData_listFileExtensions_ShouldPrintFileExtensions(t *testing.T) {
+	t.Parallel()
+
 	var fileData = FileData{}
 
 	fileData.addFileExtension("abc")
@@ -91,7 +83,7 @@ func TestFileData_listFileExtensions_ShouldPrintFileExtensions(t *testing.T) {
 	var buf bytes.Buffer
 	old := os.Stdout
 	input, output, _ := os.Pipe()
-	os.Stdout = output
+	log.SetOutput(output)
 
 	fileData.ListFileExtensions()
 
@@ -101,24 +93,20 @@ func TestFileData_listFileExtensions_ShouldPrintFileExtensions(t *testing.T) {
 
 	actualOutput := buf.String()
 
-	if !bytes.Contains([]byte(actualOutput), []byte("Extensions:\n")) {
-		t.Fatal("Expected output to contain 'Extensions:\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("abc: 2\n")) {
-		t.Fatal("Expected output to contain 'abc: 2\\n'")
-	}
-	if !bytes.Contains([]byte(actualOutput), []byte("123: 1\n")) {
-		t.Fatal("Expected output to contain '123: 1\\n'")
-	}
+	assert.True(t, bytes.Contains([]byte(actualOutput), []byte("Extensions:\n")), "Expected output to contain 'Extensions:\\n'")
+	assert.True(t, bytes.Contains([]byte(actualOutput), []byte("abc: 2\n")), "Expected output to contain 'abc: 2\\n'")
+	assert.True(t, bytes.Contains([]byte(actualOutput), []byte("123: 1\n")), "Expected output to contain '123: 1\\n'")
 }
 
 func TestFileData_listFileExtensions_ShouldHandleNilUniqueExtensions(t *testing.T) {
-	var fileData = FileData{}
+	t.Parallel()
+
+	fileData := FileData{}
 
 	var buf bytes.Buffer
 	old := os.Stdout
 	input, output, _ := os.Pipe()
-	os.Stdout = output
+	log.SetOutput(output)
 
 	fileData.ListFileExtensions()
 
@@ -207,18 +195,20 @@ func TestFileData_ListFiles(t *testing.T) {
 			t.Parallel()
 		})
 
-		var configData = config.Config{
-			ListLimit: testData.listLimit,
-		}
+		var (
+			configData = config.Config{
+				ListLimit: testData.listLimit,
+			}
 
-		var fileData = FileData{
-			FilesList: testData.files,
-		}
+			fileData = FileData{
+				FilesList: testData.files,
+			}
 
-		var buf bytes.Buffer
+			buf bytes.Buffer
+		)
 		old := os.Stdout
 		input, output, _ := os.Pipe()
-		os.Stdout = output
+		log.SetOutput(output)
 
 		fileData.ListFiles(&configData)
 
@@ -234,22 +224,17 @@ func TestFileData_ListFiles(t *testing.T) {
 		} else {
 			expectedOutput = fmt.Sprintf("Files in list of length %d:", testData.expectedNumFiles)
 		}
-		if !bytes.Contains([]byte(actualOutput), []byte(expectedOutput+"\n")) {
-			t.Errorf("Actual output doesn't match expected output. Expecting: %s, \\n'", expectedOutput)
-		}
+
+		assert.Contains(t, actualOutput, expectedOutput, "Actual output doesn't match expected output. Expecting: %s, \\n'", expectedOutput)
 
 		for index := range testData.files[:testData.expectedNumPrintedFiles] {
 			var fileName = testData.files[index].Path + " - " + testData.files[index].FileName
 
-			if !bytes.Contains([]byte(actualOutput), []byte(fileName+"\n")) {
-				t.Errorf("Expected output to contain '%s\\n'", fileName)
-			}
+			assert.True(t, bytes.Contains([]byte(actualOutput), []byte(fileName+"\n")), "Expected output to contain '%s\\n'", fileName)
 		}
 
 		if testData.expectContinuationEllipse {
-			if !bytes.Contains([]byte(actualOutput), []byte("...")) {
-				t.Error("Expected output to contain '...\\n'")
-			}
+			assert.True(t, bytes.Contains([]byte(actualOutput), []byte("...")), "Expected output to contain '...\\n'")
 		}
 	}
 }

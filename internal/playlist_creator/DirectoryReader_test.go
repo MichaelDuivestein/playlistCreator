@@ -1,6 +1,7 @@
 package playlist_creator
 
 import (
+	"github.com/stretchr/testify/assert"
 	"playlistCreator/internal/playlist_creator/config"
 	"testing"
 )
@@ -56,10 +57,8 @@ func TestIsExtensionAllowed(t *testing.T) {
 			}
 
 			result := isExtensionAllowed(&configData, testData.extension)
-			if result != testData.expectedAllowed {
-				t.Errorf("isExtensionAllowed(%v, %q) = %v; want %v",
-					testData.whitelist, testData.extension, result, testData.expectedAllowed)
-			}
+			assert.Equal(t, testData.expectedAllowed, result, "isExtensionAllowed(%v, %q) = %v; want %v",
+				testData.whitelist, testData.extension, result, testData.expectedAllowed)
 		})
 	}
 }

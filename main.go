@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"playlistCreator/internal/playlist_creator"
 	"playlistCreator/internal/playlist_creator/config"
@@ -13,9 +12,13 @@ func main() {
 		log.Fatalf("Error loading config: %s", err.Error())
 	}
 
-	var fileData = playlist_creator.ReadFiles(configData)
+	err, fileData := playlist_creator.ReadFiles(configData)
+	if err == nil {
+		log.Println("Error while reading files")
+		return
+	}
 	if fileData.FilesList == nil || len(fileData.FilesList) == 0 {
-		fmt.Println("No files found")
+		log.Println("No files found")
 		return
 	}
 

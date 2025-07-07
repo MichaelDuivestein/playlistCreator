@@ -1,6 +1,7 @@
 package playlist_creator
 
 import (
+	"errors"
 	"fmt"
 	"iter"
 	"log"
@@ -20,13 +21,12 @@ func WritePlaylist(config *config.Config, fileData *FileData) error {
 
 	println("Writing playlists")
 
-	var err = createFolderIfNotExists(config.OutputPath)
+	err := createFolderIfNotExists(config.OutputPath)
 	if err != nil {
 		return err
 	}
 
 	var chunks iter.Seq[[]FileEntry]
-
 	if config.SplitPlaylist {
 		chunks = slices.Chunk(fileData.FilesList, config.ChunkSize)
 	} else {
@@ -36,7 +36,7 @@ func WritePlaylist(config *config.Config, fileData *FileData) error {
 	var playlistNum = 0
 	for entry := range chunks {
 		playlistNum++
-		fmt.Printf("Writing playlist %d\n", playlistNum)
+		log.Printf("Writing playlist %d\n", playlistNum)
 		var err = writePlaylistFile(config, playlistNum, &entry)
 		if err != nil {
 			return err
@@ -48,7 +48,8 @@ func WritePlaylist(config *config.Config, fileData *FileData) error {
 func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]FileEntry) error {
 	file, err := os.Create(config.OutputPath + "/" + config.PlaylistName + "_" + fmt.Sprintf("%02d", playlistNum) + ".m3u8")
 	if err != nil {
-		log.Printf("Could not create playlist file %s_%s.m3u8: %s", config.PlaylistName, fmt.Sprintf("%02d", playlistNum), err.Error())
+		err = fmt.Errorf("could not create playlist file %s_%s.m3u8: %s", config.PlaylistName, fmt.Sprintf("%02d", playlistNum), err.Error())
+		log.Println(err.Error())
 		return err
 	}
 
@@ -61,7 +62,7 @@ func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]Fi
 	}
 
 	for _, entry := range *fileEntries {
-		var title = ""
+		title := ""
 		if config.ReadTags {
 			title = createPlaylistEntryName(entry)
 		}
@@ -83,14 +84,15 @@ func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]Fi
 }
 
 func createFolderIfNotExists(pathAndFolder string) error {
-	var _, err = os.Stat(pathAndFolder)
+	_, err := os.Stat(pathAndFolder)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
 
-	if os.IsNotExist(err) {
-		err := os.MkdirAll(pathAndFolder, os.FileMode(0777))
-		if err != nil {
-			log.Printf("Error: Cannot create folder: %s, %s", pathAndFolder, err.Error())
-			return err
-		}
+	err = os.MkdirAll(pathAndFolder, os.FileMode(0777))
+	if err != nil {
+		log.Printf("Error: Cannot create folder: %s, %s", pathAndFolder, err.Error())
+		return err
 	}
 	return nil
 }

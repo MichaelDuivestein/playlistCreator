@@ -1,7 +1,7 @@
 package playlist_creator
 
 import (
-	"fmt"
+	"log"
 	"playlistCreator/internal/playlist_creator/config"
 	"strings"
 )
@@ -16,9 +16,11 @@ type FileData struct {
 	UniqueExtensions map[string]int
 }
 
+func NewFileData() *FileData { return &FileData{UniqueExtensions: make(map[string]int)} }
+
 func (fileData *FileData) addFileExtension(extension string) {
-	var extensionLowercase = strings.ToLower(extension)
-	if fileData.UniqueExtensions == nil { //TODO: Can this initialisation be moved to a getter?
+	extensionLowercase := strings.ToLower(extension)
+	if fileData.UniqueExtensions == nil {
 		fileData.UniqueExtensions = make(map[string]int)
 	}
 
@@ -30,26 +32,26 @@ func (fileData *FileData) addFileExtension(extension string) {
 }
 
 func (fileData *FileData) ListFileExtensions() {
-	fmt.Println("Extensions:")
+	log.Println("Extensions:")
 	for extension, count := range fileData.UniqueExtensions {
-		fmt.Printf("%s: %d\n", extension, count)
+		log.Printf("%s: %d\n", extension, count)
 	}
 }
 
 func (fileData *FileData) ListFiles(config *config.Config) {
-	var listLimit = len(fileData.FilesList)
+	listLimit := len(fileData.FilesList)
 	if config.ListLimit != -1 {
 		listLimit = min(config.ListLimit, len(fileData.FilesList))
-		fmt.Printf("First %d files in list of length %d:\n", listLimit, len(fileData.FilesList))
+		log.Printf("First %d files in list of length %d:\n", listLimit, len(fileData.FilesList))
 	} else {
-		fmt.Printf("Files in list of length %d:\n", len(fileData.FilesList))
+		log.Printf("Files in list of length %d:\n", len(fileData.FilesList))
 	}
 
 	for counter := 0; counter < listLimit; counter++ {
-		var fileEntry = fileData.FilesList[counter]
-		fmt.Printf("%s - %s\n", fileEntry.Path, fileEntry.FileName)
+		fileEntry := fileData.FilesList[counter]
+		log.Printf("%s - %s\n", fileEntry.Path, fileEntry.FileName)
 	}
 	if listLimit < len(fileData.FilesList) {
-		fmt.Println("...")
+		log.Println("...")
 	}
 }
