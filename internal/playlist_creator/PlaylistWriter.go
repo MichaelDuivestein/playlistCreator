@@ -1,7 +1,6 @@
 package playlist_creator
 
 import (
-	"errors"
 	"fmt"
 	"iter"
 	"log"
@@ -19,10 +18,11 @@ func WritePlaylist(config *config.Config, fileData *FileData) error {
 		})
 	}
 
-	println("Writing playlists")
+	log.Println("Writing playlists")
 
-	err := createFolderIfNotExists(config.OutputPath)
+	err := os.MkdirAll(config.OutputPath, os.FileMode(0777))
 	if err != nil {
+		log.Printf("Error: Cannot create folder: %s, %s", config.OutputPath, err.Error())
 		return err
 	}
 
@@ -79,20 +79,6 @@ func writePlaylistFile(config *config.Config, playlistNum int, fileEntries *[]Fi
 		if err != nil {
 			log.Printf("Error writing path to playlist file %s_%s.m3u8. Path: %s/%s. Error: %s", config.PlaylistName, fmt.Sprintf("%02d", playlistNum), entry.Path, entry.FileName, err.Error())
 		}
-	}
-	return nil
-}
-
-func createFolderIfNotExists(pathAndFolder string) error {
-	_, err := os.Stat(pathAndFolder)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-
-	err = os.MkdirAll(pathAndFolder, os.FileMode(0777))
-	if err != nil {
-		log.Printf("Error: Cannot create folder: %s, %s", pathAndFolder, err.Error())
-		return err
 	}
 	return nil
 }

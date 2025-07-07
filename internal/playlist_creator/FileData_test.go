@@ -115,10 +115,7 @@ func TestFileData_listFileExtensions_ShouldHandleNilUniqueExtensions(t *testing.
 	buf.ReadFrom(input)
 
 	actualOutput := buf.String()
-
-	if !bytes.Contains([]byte(actualOutput), []byte("Extensions:\n")) {
-		t.Fatal("Expected output to contain 'Extensions:\\n'")
-	}
+	assert.Contains(t, actualOutput, "Extensions:\n", "Expected output to contain 'Extensions:\\n'")
 }
 
 func TestFileData_ListFiles(t *testing.T) {
