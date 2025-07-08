@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-func ReadFiles(config *config.Config) (error, *FileData) {
+func ReadFiles(config *config.Config) (*FileData, error) {
 	var fileData = NewFileData()
 
 	err := readFilesRecursively(config, config.InputPath, fileData)
 	if err != nil {
 		log.Println(err)
-		return err, nil
+		return nil, err
 	}
 
 	if fileData.FilesList != nil && len(fileData.FilesList) > 1 {
@@ -24,7 +24,7 @@ func ReadFiles(config *config.Config) (error, *FileData) {
 		})
 	}
 
-	return nil, fileData
+	return fileData, nil
 }
 
 func readFilesRecursively(config *config.Config, directoryNameAndPath string, fileData *FileData) error {

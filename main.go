@@ -12,12 +12,12 @@ func main() {
 		log.Fatalf("Error loading config: %s", err.Error())
 	}
 
-	err, fileData := playlist_creator.ReadFiles(configData)
-	if err == nil {
+	fileData, err := playlist_creator.ReadFiles(configData)
+	if err != nil {
 		log.Println("Error while reading files")
 		return
 	}
-	if fileData.FilesList == nil || len(fileData.FilesList) == 0 {
+	if len(fileData.FilesList) == 0 {
 		log.Println("No files found")
 		return
 	}

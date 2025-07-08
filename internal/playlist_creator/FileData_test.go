@@ -72,8 +72,6 @@ func TestFileData_incrementUniqueExtensions_ShouldIgnoreCase(t *testing.T) {
 }
 
 func TestFileData_listFileExtensions_ShouldPrintFileExtensions(t *testing.T) {
-	t.Parallel()
-
 	var fileData = FileData{}
 
 	fileData.addFileExtension("abc")
@@ -99,8 +97,6 @@ func TestFileData_listFileExtensions_ShouldPrintFileExtensions(t *testing.T) {
 }
 
 func TestFileData_listFileExtensions_ShouldHandleNilUniqueExtensions(t *testing.T) {
-	t.Parallel()
-
 	fileData := FileData{}
 
 	var buf bytes.Buffer
@@ -188,9 +184,7 @@ func TestFileData_ListFiles(t *testing.T) {
 
 	for _, testData := range tests {
 		testData := testData
-		t.Run(testData.name, func(t *testing.T) {
-			t.Parallel()
-		})
+		t.Run(testData.name, func(t *testing.T) {})
 
 		var (
 			configData = config.Config{
