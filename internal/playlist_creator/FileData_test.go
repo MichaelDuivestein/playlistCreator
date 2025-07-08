@@ -184,48 +184,48 @@ func TestFileData_ListFiles(t *testing.T) {
 
 	for _, testData := range tests {
 		testData := testData
-		t.Run(testData.name, func(t *testing.T) {})
+		t.Run(testData.name, func(t *testing.T) {
+			var (
+				configData = config.Config{
+					ListLimit: testData.listLimit,
+				}
 
-		var (
-			configData = config.Config{
-				ListLimit: testData.listLimit,
+				fileData = FileData{
+					FilesList: testData.files,
+				}
+
+				buf bytes.Buffer
+			)
+			old := os.Stdout
+			input, output, _ := os.Pipe()
+			log.SetOutput(output)
+
+			fileData.ListFiles(&configData)
+
+			output.Close()
+			os.Stdout = old
+			buf.ReadFrom(input)
+
+			actualOutput := buf.String()
+
+			var expectedOutput string
+			if testData.expectTruncatedList {
+				expectedOutput = fmt.Sprintf("First %d files in list of length %d:", testData.expectedNumPrintedFiles, testData.expectedNumFiles)
+			} else {
+				expectedOutput = fmt.Sprintf("Files in list of length %d:", testData.expectedNumFiles)
 			}
 
-			fileData = FileData{
-				FilesList: testData.files,
+			assert.Contains(t, actualOutput, expectedOutput, "Actual output doesn't match expected output. Expecting: %s, \\n'", expectedOutput)
+
+			for index := range testData.files[:testData.expectedNumPrintedFiles] {
+				var fileName = testData.files[index].Path + " - " + testData.files[index].FileName
+
+				assert.Contains(t, actualOutput, fileName+"\n", "Expected output to contain '%s\\n'", fileName)
 			}
 
-			buf bytes.Buffer
-		)
-		old := os.Stdout
-		input, output, _ := os.Pipe()
-		log.SetOutput(output)
-
-		fileData.ListFiles(&configData)
-
-		output.Close()
-		os.Stdout = old
-		buf.ReadFrom(input)
-
-		actualOutput := buf.String()
-
-		var expectedOutput string
-		if testData.expectTruncatedList {
-			expectedOutput = fmt.Sprintf("First %d files in list of length %d:", testData.expectedNumPrintedFiles, testData.expectedNumFiles)
-		} else {
-			expectedOutput = fmt.Sprintf("Files in list of length %d:", testData.expectedNumFiles)
-		}
-
-		assert.Contains(t, actualOutput, expectedOutput, "Actual output doesn't match expected output. Expecting: %s, \\n'", expectedOutput)
-
-		for index := range testData.files[:testData.expectedNumPrintedFiles] {
-			var fileName = testData.files[index].Path + " - " + testData.files[index].FileName
-
-			assert.Contains(t, actualOutput, fileName+"\n", "Expected output to contain '%s\\n'", fileName)
-		}
-
-		if testData.expectContinuationEllipse {
-			assert.Contains(t, actualOutput, "...", "Expected output to contain '...\\n'")
-		}
+			if testData.expectContinuationEllipse {
+				assert.Contains(t, actualOutput, "...", "Expected output to contain '...\\n'")
+			}
+		})
 	}
 }
